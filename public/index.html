@@ -221,16 +221,17 @@
             position: relative;
         }
 
-        .car-1 { left: 10%; }
-        .car-2 { left: 30%; }
-        .car-3 { left: 55%; }
-        .car-4 { left: 80%; }
+        /* Fila inferior - distribuidos uniformemente */
+        .car-1 { left: 5%; }
+        .car-2 { left: 28%; }
+        .car-3 { left: 51%; }
+        .car-4 { left: 74%; }
 
-        /* Segunda fila de coches (dirección opuesta) */
-        .car-5 { left: 20%; bottom: 35px; }
-        .car-6 { left: 45%; bottom: 35px; }
-        .car-7 { left: 70%; bottom: 35px; }
-        .car-8 { left: 90%; bottom: 35px; }
+        /* Fila superior - distribuidos uniformemente (dirección opuesta) */
+        .car-5 { left: 12%; bottom: 35px; }
+        .car-6 { left: 35%; bottom: 35px; }
+        .car-7 { left: 58%; bottom: 35px; }
+        .car-8 { left: 81%; bottom: 35px; }
 
         /* ══════════════════════════════════════════
            CONTENIDO PRINCIPAL
@@ -856,36 +857,43 @@
 </div>
 
 <script>
-    // Animación de coches con scroll
+    // Animación de coches con scroll - sin salirse de los bordes
     const cars = document.querySelectorAll('.car');
     let lastScrollY = window.scrollY;
     
-    // Posiciones iniciales de cada coche
-    const carPositions = {};
-    cars.forEach((car, index) => {
-        carPositions[index] = parseFloat(car.style.left) || (index * 15 + 10);
-    });
+    // Configuración de cada coche: posición inicial (%), velocidad, dirección, rango máximo de movimiento (px)
+    const carConfig = [
+        { initialPercent: 5, speed: 0.8, direction: 1, maxRange: 80 },   // car-1
+        { initialPercent: 28, speed: 1.2, direction: 1, maxRange: 120 }, // car-2
+        { initialPercent: 51, speed: 0.6, direction: 1, maxRange: 60 },  // car-3
+        { initialPercent: 74, speed: 1.0, direction: 1, maxRange: 100 }, // car-4
+        { initialPercent: 12, speed: 1.1, direction: -1, maxRange: 90 }, // car-5
+        { initialPercent: 35, speed: 0.7, direction: -1, maxRange: 70 }, // car-6
+        { initialPercent: 58, speed: 1.3, direction: -1, maxRange: 130 },// car-7
+        { initialPercent: 81, speed: 0.9, direction: -1, maxRange: 85 }  // car-8
+    ];
+    
+    // Desplazamiento actual de cada coche desde su posición inicial
+    const carOffsets = cars.length > 0 ? Array(cars.length).fill(0) : [];
 
     function updateCars() {
         const scrollDelta = window.scrollY - lastScrollY;
-        const scrollSpeed = 0.5; // Multiplicador de velocidad base
+        const scrollSpeed = 0.3; // Multiplicador de velocidad base
         
         cars.forEach((car, index) => {
-            const speed = parseFloat(car.dataset.speed) || 1;
-            const direction = parseFloat(car.dataset.direction) || 1;
+            const config = carConfig[index];
+            if (!config) return;
             
-            // Actualizar posición basada en el scroll
-            carPositions[index] += scrollDelta * scrollSpeed * speed * direction;
+            // Calcular nuevo offset
+            let newOffset = carOffsets[index] + scrollDelta * scrollSpeed * config.speed * config.direction;
             
-            // Wrap around - cuando el coche sale de la pantalla, aparece del otro lado
-            const viewportWidth = window.innerWidth;
-            if (carPositions[index] > viewportWidth + 60) {
-                carPositions[index] = -60;
-            } else if (carPositions[index] < -60) {
-                carPositions[index] = viewportWidth + 60;
-            }
+            // Limitar el movimiento al rango máximo (no sale de los bordes)
+            newOffset = Math.max(-config.maxRange, Math.min(config.maxRange, newOffset));
             
-            car.style.transform = `translateX(${carPositions[index] - parseFloat(getComputedStyle(car).left)}px)`;
+            carOffsets[index] = newOffset;
+            
+            // Aplicar transformación
+            car.style.transform = `translateX(${newOffset}px)`;
         });
         
         lastScrollY = window.scrollY;
