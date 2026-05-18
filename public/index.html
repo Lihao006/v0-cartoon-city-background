@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel de Análisis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            min-height: 200vh;
+            position: relative;
+        }
+
+        /* ══════════════════════════════════════════
+           FONDO CARTOON CON CIUDAD Y COCHES
+        ═══════════════════════════════════════════ */
+        .city-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .city-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 60%, #7EC8E3 70%, #98D8C8 100%);
+        }
+
+        /* Sol cartoon */
+        .sun {
+            position: absolute;
+            top: 40px;
+            right: 80px;
+            width: 80px;
+            height: 80px;
+            background: #FFE066;
+            border-radius: 50%;
+            box-shadow: 0 0 40px #FFE066, 0 0 80px rgba(255,224,102,0.5);
+        }
+
+        /* Nubes */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.9;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .cloud-1 {
+            width: 100px;
+            height: 40px;
+            top: 60px;
+            left: 10%;
+        }
+        .cloud-1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .cloud-1::after { width: 40px; height: 40px; top: -20px; left: 50px; }
+        
+        .cloud-2 {
+            width: 120px;
+            height: 45px;
+            top: 100px;
+            left: 50%;
+        }
+        .cloud-2::before { width: 60px; height: 60px; top: -30px; left: 20px; }
+        .cloud-2::after { width: 45px; height: 45px; top: -22px; left: 60px; }
+
+        .cloud-3 {
+            width: 80px;
+            height: 35px;
+            top: 80px;
+            left: 75%;
+        }
+        .cloud-3::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+        .cloud-3::after { width: 35px; height: 35px; top: -17px; left: 40px; }
+
+        /* Edificios - Perspectiva plana */
+        .buildings {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .building {
+            position: relative;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .building::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%;
+            height: 25px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .b1 { width: 60px; height: 180px; background: #FF6B6B; left: 0; }
+        .b2 { width: 80px; height: 220px; background: #4ECDC4; }
+        .b3 { width: 55px; height: 150px; background: #FFE66D; }
+        .b4 { width: 90px; height: 280px; background: #95E1D3; }
+        .b5 { width: 70px; height: 200px; background: #F38181; }
+        .b6 { width: 50px; height: 130px; background: #AA96DA; }
+        .b7 { width: 85px; height: 240px; background: #FCBAD3; }
+        .b8 { width: 65px; height: 170px; background: #A8D8EA; }
+        .b9 { width: 75px; height: 210px; background: #FFB6B9; }
+        .b10 { width: 55px; height: 140px; background: #FFEAA7; }
+        .b11 { width: 95px; height: 260px; background: #DFE6E9; }
+        .b12 { width: 60px; height: 160px; background: #81ECEC; }
+
+        /* Ventanas de los edificios */
+        .windows {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 5px;
+        }
+
+        .window {
+            width: 12px;
+            height: 16px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 2px;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.1);
+        }
+
+        /* Carretera */
+        .road {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #4a4a4a;
+        }
+
+        .road::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(
+                90deg,
+                #FFE066 0px,
+                #FFE066 30px,
+                transparent 30px,
+                transparent 60px
+            );
+            transform: translateY(-50%);
+        }
+
+        /* Acera */
+        .sidewalk {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: #B8B8B8;
+            border-top: 3px solid #9a9a9a;
+        }
+
+        /* ══════════════════════════════════════════
+           COCHES ANIMADOS
+        ═══════════════════════════════════════════ */
+        .cars-container {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        .car {
+            position: absolute;
+            bottom: 5px;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Coche estilo cartoon - SVG inline */
+        .car-body {
+            position: relative;
+        }
+
+        .car-1 { left: 10%; }
+        .car-2 { left: 30%; }
+        .car-3 { left: 55%; }
+        .car-4 { left: 80%; }
+
+        /* Segunda fila de coches (dirección opuesta) */
+        .car-5 { left: 20%; bottom: 35px; }
+        .car-6 { left: 45%; bottom: 35px; }
+        .car-7 { left: 70%; bottom: 35px; }
+        .car-8 { left: 90%; bottom: 35px; }
+
+        /* ══════════════════════════════════════════
+           CONTENIDO PRINCIPAL
+        ═══════════════════════════════════════════ */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 6px;
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .intro {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 16px 0 28px;
+            font-size: 0.88rem;
+            color: #555;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* ── Sección colapsable ── */
+        details.seccion {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        details.seccion > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            user-select: none;
+            border-left: 5px solid var(--accent);
+        }
+        details.seccion > summary::-webkit-details-marker { display: none; }
+        details.seccion > summary:hover { background-color: rgba(247,250,253,0.9); }
+
+        .sec-num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent);
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .sec-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .sec-count {
+            font-size: 0.78rem;
+            color: #aaa;
+            white-space: nowrap;
+        }
+
+        .summary-arrow {
+            font-size: 0.85rem;
+            color: #aaa;
+            transition: transform 0.25s;
+            flex-shrink: 0;
+        }
+        details.seccion[open] > summary .summary-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Acento por sección */
+        details.s1 { --accent: #2980b9; }
+        details.s2 { --accent: #16a085; }
+        details.s3 { --accent: #e67e22; }
+        details.s4 { --accent: #8e44ad; }
+        details.s5 { --accent: #c0392b; }
+        details.s6 { --accent: #27ae60; }
+
+        /* ── Contenido interno ── */
+        .seccion-inner {
+            padding: 6px 20px 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .subgrupo {
+            margin-top: 14px;
+        }
+        .subgrupo-titulo {
+            font-size: 0.73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #bbb;
+            margin-bottom: 8px;
+        }
+
+        /* ── Tarjeta de mapa ── */
+        .card {
+            display: block;
+            background: rgba(249,251,253,0.95);
+            padding: 11px 15px;
+            border-radius: 7px;
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 0.97rem;
+            transition: transform 0.15s, background-color 0.15s;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 9px;
+        }
+        .card:hover {
+            transform: translateX(5px);
+            background-color: rgba(235,245,251,0.95);
+        }
+        .card .card-label {
+            color: var(--accent);
+        }
+
+        p.descripcion {
+            font-size: 0.84rem;
+            color: #666;
+            margin: 5px 0 0;
+            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        /* Sección de un solo mapa */
+        .solo {
+            padding: 14px 20px 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* Árboles decorativos */
+        .trees {
+            position: absolute;
+            bottom: 95px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            pointer-events: none;
+        }
+
+        .tree {
+            position: relative;
+        }
+
+        .tree-trunk {
+            width: 10px;
+            height: 20px;
+            background: #8B4513;
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        .tree-top {
+            width: 30px;
+            height: 40px;
+            background: #2ECC71;
+            border-radius: 50% 50% 50% 50%;
+            position: relative;
+            top: 0;
+        }
+
+        .tree-top::before {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            background: #27AE60;
+            border-radius: 50%;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Fondo de ciudad cartoon -->
+<div class="city-background">
+    <div class="city-layer">
+        <!-- Sol -->
+        <div class="sun"></div>
+        
+        <!-- Nubes -->
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+
+        <!-- Edificios -->
+        <div class="buildings">
+            <div class="building b1">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b2">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b3">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b4">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b5">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b6">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b7">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b8">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b9">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b10">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b11">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+            <div class="building b12">
+                <div class="windows">
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                    <div class="window"></div><div class="window"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Árboles -->
+        <div class="trees">
+            <div class="tree"><div class="tree-top"></div><div class="tree-trunk"></div></div>
+            <div class="tree"><div class="tree-top"></div><div class="tree-trunk"></div></div>
+            <div class="tree"><div class="tree-top"></div><div class="tree-trunk"></div></div>
+            <div class="tree"><div class="tree-top"></div><div class="tree-trunk"></div></div>
+            <div class="tree"><div class="tree-top"></div><div class="tree-trunk"></div></div>
+        </div>
+
+        <!-- Acera -->
+        <div class="sidewalk"></div>
+
+        <!-- Carretera -->
+        <div class="road"></div>
+
+        <!-- Contenedor de coches -->
+        <div class="cars-container">
+            <!-- Fila inferior (hacia la derecha) -->
+            <div class="car car-1" data-speed="1" data-direction="1">
+                <svg width="60" height="30" viewBox="0 0 60 30">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#E74C3C"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#E74C3C"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-2" data-speed="1.5" data-direction="1">
+                <svg width="60" height="30" viewBox="0 0 60 30">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#3498DB"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#3498DB"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-3" data-speed="0.8" data-direction="1">
+                <svg width="60" height="30" viewBox="0 0 60 30">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#9B59B6"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#9B59B6"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-4" data-speed="1.2" data-direction="1">
+                <svg width="60" height="30" viewBox="0 0 60 30">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#1ABC9C"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#1ABC9C"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+
+            <!-- Fila superior (hacia la izquierda - invertidos) -->
+            <div class="car car-5" data-speed="1.3" data-direction="-1">
+                <svg width="60" height="30" viewBox="0 0 60 30" style="transform: scaleX(-1)">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#F39C12"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#F39C12"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-6" data-speed="0.9" data-direction="-1">
+                <svg width="60" height="30" viewBox="0 0 60 30" style="transform: scaleX(-1)">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#E91E63"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#E91E63"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-7" data-speed="1.1" data-direction="-1">
+                <svg width="60" height="30" viewBox="0 0 60 30" style="transform: scaleX(-1)">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#00BCD4"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#00BCD4"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+            <div class="car car-8" data-speed="1.4" data-direction="-1">
+                <svg width="60" height="30" viewBox="0 0 60 30" style="transform: scaleX(-1)">
+                    <rect x="5" y="12" width="50" height="14" rx="3" fill="#8BC34A"/>
+                    <rect x="12" y="5" width="30" height="12" rx="3" fill="#8BC34A"/>
+                    <rect x="15" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <rect x="28" y="7" width="10" height="8" rx="1" fill="#AED6F1"/>
+                    <circle cx="15" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="15" cy="26" r="2" fill="#7F8C8D"/>
+                    <circle cx="45" cy="26" r="5" fill="#2C3E50"/>
+                    <circle cx="45" cy="26" r="2" fill="#7F8C8D"/>
+                    <rect x="52" y="15" width="4" height="3" rx="1" fill="#F39C12"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="content-wrapper">
+
+<h1>Visualización de Geoestadística Descriptiva</h1>
+
+<div class="intro">
+    Los estados en color negro indican falta de información o información insuficiente.<br>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     1 — Número de coches vendidos
+═══════════════════════════════════════════ -->
+<details class="seccion s1" open>
+    <summary>
+        <span class="sec-num">1</span>
+        <span class="sec-title">Número de coches vendidos en cada estado</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="solo">
+        <a href="num_coches_vendidos.html" class="card">
+            <span class="card-label">🚗 Mapa 1 — Volumen del mercado por estado (Univariante) </span>
+            <p class="descripcion">
+                Cantidad de coches vendidos en cada estado. Se observa un gran grupo de estados con pocas ventas
+                (1–10) al noroeste, atribuido principalmente a la baja densidad de población de esa zona.
+            </p>
+        </a>
+    </div>
+</details>
+
+
+<!-- ══════════════════════════════════════════
+     2 — Transporte al trabajo
+═══════════════════════════════════════════ -->
+<details class="seccion s2">
+    <summary>
+        <span class="sec-num">2</span>
+        <span class="sec-title">Transporte al trabajo</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="solo">
+        <a href="mapa_transporte_trabajo.html" class="card">
+            <span class="card-label">📍 Mapa 2 — Modos de transporte al trabajo (Base de datos externa) </span>
+            <p class="descripcion">
+                Uso del transporte público frente al vehículo privado por estado.
+                El transporte público apenas alcanza el 0.5–4 % en la mayoría de estados;
+                el vehículo privado domina con el 70–90 %.
+                Excepción notable: Nueva York (23.5 % transporte público, 55.5 % vehículo privado).
+            </p>
+        </a>
+    </div>
+</details>
+
+
+<!-- ══════════════════════════════════════════
+     3 — Precio de los coches
+═══════════════════════════════════════════ -->
+<details class="seccion s3">
+    <summary>
+        <span class="sec-num">3</span>
+        <span class="sec-title">Precio de los coches en cada estado</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="seccion-inner">
+
+        <div class="subgrupo">
+            <div class="subgrupo-titulo">Una variable</div>
+            <a href="num_price.html" class="card">
+                <span class="card-label">💰 Mapa 3.1 — Precio medio por estado (Univariante)</span>
+                <p class="descripcion">
+                    Los estados del centro-este rondan los 28 000 $, mientras que los del suroeste se acercan
+                    a los 30 000 $. West Virginia y New Jersey presentan precios atípicamente altos (~36 000 $)
+                    con volúmenes de venta muy bajos.
+                </p>
+            </a>
+            <a href="distribucion_precio_estados.png" class="card" target="_blank">
+                <span class="card-label">🖼️ Gráfico 3.2 — Distribución del precio por estado</span>
+                <p class="descripcion">Imagen estática con la distribución de precios desglosada por estado (abre en nueva pestaña).</p>
+            </a>
+        </div>
+
+    </div>
+</details>
+
+
+<!-- ══════════════════════════════════════════
+     4 — Estado de los coches
+═══════════════════════════════════════════ -->
+<details class="seccion s4">
+    <summary>
+        <span class="sec-num">4</span>
+        <span class="sec-title">Estado de los coches</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="seccion-inner">
+
+        <div class="subgrupo">
+            <div class="subgrupo-titulo">Edad, kilometraje y condición</div>
+            <a href="num_car_age.html" class="card">
+                <span class="card-label">📅 Mapa 4.1 — Antigüedad media de los vehículos (Univariante)</span>
+                <p class="descripcion">Antigüedad promedio de los coches vendidos en cada estado.</p>
+            </a>
+            <a href="num_mileage.html" class="card">
+                <span class="card-label">🛣️ Mapa 4.2 — Kilometraje medio (Univariante)</span>
+                <p class="descripcion">Kilometraje medio de los vehículos vendidos en cada estado.</p>
+            </a>
+            <a href="cat_is_new.html" class="card">
+                <span class="card-label">🆕 Mapa 4.3 — Proporción de vehículos nuevos (Univariante)</span>
+                <p class="descripcion">Porcentaje de vehículos nuevos frente a usados en cada estado.</p>
+            </a>
+        </div>
+        <div class="subgrupo">
+            <div class="subgrupo-titulo">Cruzado con precio</div>
+            <a href="bi_price__car_age.html" class="card">
+                <span class="card-label">📅 Mapa 4.4 — Precio medio y antigüedad (Bivariante)</span>
+                <p class="descripcion">Relación entre el precio medio y la antigüedad de los vehículos por estado.</p>
+            </a>
+            <a href="bi_price__is_new.html" class="card">
+                <span class="card-label">🆕 Mapa 4.5 — Precio medio y proporción de vehículos nuevos (Bivariante)</span>
+                <p class="descripcion">Cruce entre el precio medio y la proporción de coches nuevos frente a usados.</p>
+            </a>
+            <a href="bi_mileage__price.html" class="card">
+                <span class="card-label">🛣️ Mapa 4.6 — Precio medio y kilometraje (Bivariante)</span>
+                <p class="descripcion">Relación entre el kilometraje medio y el precio de venta por estado.</p>
+            </a>
+        </div>
+    </div>
+</details>
+
+
+<!-- ══════════════════════════════════════════
+     5 — Marcas de coches populares
+═══════════════════════════════════════════ -->
+<details class="seccion s5">
+    <summary>
+        <span class="sec-num">5</span>
+        <span class="sec-title">Marcas de coches populares</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="solo">
+        <a href="bi_price__make_name.html" class="card">
+            <span class="card-label">🏷️ Mapa 5 — Marca dominante y precio medio por estado (Bivariante)</span>
+            <p class="descripcion">
+                Marca más vendida en cada estado, su proporción sobre el total de ventas
+                y el precio medio asociado a esa marca en el estado.
+            </p>
+        </a>
+    </div>
+</details>
+
+
+<!-- ══════════════════════════════════════════
+     6 — Tamaño y Gama
+═══════════════════════════════════════════ -->
+<details class="seccion s6">
+    <summary>
+        <span class="sec-num">6</span>
+        <span class="sec-title">Tamaño y gama de los coches</span>
+        <span class="summary-arrow">▶</span>
+    </summary>
+    <div class="seccion-inner">
+
+        <div class="subgrupo">
+            <div class="subgrupo-titulo">Índices individuales</div>
+            <a href="idx_gamma.html" class="card">
+                <span class="card-label">🎖️ Mapa 6.1 — Índice de gama (Multivariante)</span>
+                <p class="descripcion">Índice sintético de la gama media de los vehículos vendidos por estado.</p>
+            </a>
+            <a href="idx_tamano.html" class="card">
+                <span class="card-label">📐 Mapa 6.2 — Índice de tamaño (Multivariante)</span>
+                <p class="descripcion">Índice sintético del tamaño medio de los vehículos vendidos por estado.</p>
+            </a>
+        </div>
+
+        <div class="subgrupo">
+            <div class="subgrupo-titulo">Análisis combinado</div>
+            <a href="tri_gama_tamano_price.html" class="card">
+                <span class="card-label">🎯 Mapa 6.3 — Gama, tamaño y precio medio (Multivariante)</span>
+                <p class="descripcion">
+                    Visualización trivariante que combina la gama del vehículo, su tamaño y el precio medio por estado.
+                </p>
+            </a>
+        </div>
+
+    </div>
+</details>
+
+</div>
+
+<script>
+    // Animación de coches con scroll
+    const cars = document.querySelectorAll('.car');
+    let lastScrollY = window.scrollY;
+    
+    // Posiciones iniciales de cada coche
+    const carPositions = {};
+    cars.forEach((car, index) => {
+        carPositions[index] = parseFloat(car.style.left) || (index * 15 + 10);
+    });
+
+    function updateCars() {
+        const scrollDelta = window.scrollY - lastScrollY;
+        const scrollSpeed = 0.5; // Multiplicador de velocidad base
+        
+        cars.forEach((car, index) => {
+            const speed = parseFloat(car.dataset.speed) || 1;
+            const direction = parseFloat(car.dataset.direction) || 1;
+            
+            // Actualizar posición basada en el scroll
+            carPositions[index] += scrollDelta * scrollSpeed * speed * direction;
+            
+            // Wrap around - cuando el coche sale de la pantalla, aparece del otro lado
+            const viewportWidth = window.innerWidth;
+            if (carPositions[index] > viewportWidth + 60) {
+                carPositions[index] = -60;
+            } else if (carPositions[index] < -60) {
+                carPositions[index] = viewportWidth + 60;
+            }
+            
+            car.style.transform = `translateX(${carPositions[index] - parseFloat(getComputedStyle(car).left)}px)`;
+        });
+        
+        lastScrollY = window.scrollY;
+    }
+
+    // Escuchar evento de scroll
+    window.addEventListener('scroll', updateCars, { passive: true });
+
+    // Animación sutil de nubes
+    const clouds = document.querySelectorAll('.cloud');
+    let cloudOffset = 0;
+    
+    function animateClouds() {
+        cloudOffset += 0.02;
+        clouds.forEach((cloud, index) => {
+            const baseLeft = parseFloat(getComputedStyle(cloud).left);
+            const movement = Math.sin(cloudOffset + index) * 5;
+            cloud.style.transform = `translateX(${movement}px)`;
+        });
+        requestAnimationFrame(animateClouds);
+    }
+    
+    animateClouds();
+</script>
+
+</body>
+</html>
