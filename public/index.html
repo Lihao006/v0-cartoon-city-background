@@ -221,16 +221,17 @@
             position: relative;
         }
 
-        .car-1 { left: 10%; }
-        .car-2 { left: 30%; }
-        .car-3 { left: 55%; }
-        .car-4 { left: 80%; }
+        /* Fila inferior - posiciones variadas */
+        .car-1 { left: 3%; }
+        .car-2 { left: 22%; }
+        .car-3 { left: 48%; }
+        .car-4 { left: 68%; }
 
-        /* Segunda fila de coches (dirección opuesta) */
-        .car-5 { left: 20%; bottom: 35px; }
-        .car-6 { left: 45%; bottom: 35px; }
-        .car-7 { left: 70%; bottom: 35px; }
-        .car-8 { left: 90%; bottom: 35px; }
+        /* Fila superior - posiciones variadas (dirección opuesta) */
+        .car-5 { left: 8%; bottom: 35px; }
+        .car-6 { left: 32%; bottom: 35px; }
+        .car-7 { left: 55%; bottom: 35px; }
+        .car-8 { left: 78%; bottom: 35px; }
 
         /* ══════════════════════════════════════════
            CONTENIDO PRINCIPAL
@@ -856,36 +857,43 @@
 </div>
 
 <script>
-    // Animación de coches con scroll
+    // Animación de coches con scroll - sin salirse de los bordes
     const cars = document.querySelectorAll('.car');
     let lastScrollY = window.scrollY;
     
-    // Posiciones iniciales de cada coche
-    const carPositions = {};
-    cars.forEach((car, index) => {
-        carPositions[index] = parseFloat(car.style.left) || (index * 15 + 10);
-    });
+    // Configuración de cada coche: posición inicial (%), velocidad, dirección, rango máximo de movimiento (px)
+    const carConfig = [
+        { initialPercent: 3, speed: 0.5, direction: 1, maxRange: 60 },    // car-1: lento, poco recorrido
+        { initialPercent: 22, speed: 1.8, direction: 1, maxRange: 180 },  // car-2: rápido, mucho recorrido
+        { initialPercent: 48, speed: 0.7, direction: 1, maxRange: 90 },   // car-3: medio-lento
+        { initialPercent: 68, speed: 1.4, direction: 1, maxRange: 150 },  // car-4: rápido
+        { initialPercent: 8, speed: 1.6, direction: -1, maxRange: 160 },  // car-5: rápido
+        { initialPercent: 32, speed: 0.4, direction: -1, maxRange: 50 },  // car-6: muy lento, poco recorrido
+        { initialPercent: 55, speed: 2.0, direction: -1, maxRange: 200 }, // car-7: muy rápido, mucho recorrido
+        { initialPercent: 78, speed: 0.9, direction: -1, maxRange: 100 }  // car-8: medio
+    ];
+    
+    // Desplazamiento actual de cada coche desde su posición inicial
+    const carOffsets = cars.length > 0 ? Array(cars.length).fill(0) : [];
 
     function updateCars() {
         const scrollDelta = window.scrollY - lastScrollY;
-        const scrollSpeed = 0.5; // Multiplicador de velocidad base
+        const scrollSpeed = 0.4; // Multiplicador de velocidad base
         
         cars.forEach((car, index) => {
-            const speed = parseFloat(car.dataset.speed) || 1;
-            const direction = parseFloat(car.dataset.direction) || 1;
+            const config = carConfig[index];
+            if (!config) return;
             
-            // Actualizar posición basada en el scroll
-            carPositions[index] += scrollDelta * scrollSpeed * speed * direction;
+            // Calcular nuevo offset
+            let newOffset = carOffsets[index] + scrollDelta * scrollSpeed * config.speed * config.direction;
             
-            // Wrap around - cuando el coche sale de la pantalla, aparece del otro lado
-            const viewportWidth = window.innerWidth;
-            if (carPositions[index] > viewportWidth + 60) {
-                carPositions[index] = -60;
-            } else if (carPositions[index] < -60) {
-                carPositions[index] = viewportWidth + 60;
-            }
+            // Limitar el movimiento al rango máximo (no sale de los bordes)
+            newOffset = Math.max(-config.maxRange, Math.min(config.maxRange, newOffset));
             
-            car.style.transform = `translateX(${carPositions[index] - parseFloat(getComputedStyle(car).left)}px)`;
+            carOffsets[index] = newOffset;
+            
+            // Aplicar transformación
+            car.style.transform = `translateX(${newOffset}px)`;
         });
         
         lastScrollY = window.scrollY;
