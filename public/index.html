@@ -221,17 +221,17 @@
             position: relative;
         }
 
-        /* Fila inferior - distribuidos uniformemente */
-        .car-1 { left: 5%; }
-        .car-2 { left: 28%; }
-        .car-3 { left: 51%; }
-        .car-4 { left: 74%; }
+        /* Fila inferior - posiciones variadas */
+        .car-1 { left: 3%; }
+        .car-2 { left: 22%; }
+        .car-3 { left: 48%; }
+        .car-4 { left: 68%; }
 
-        /* Fila superior - distribuidos uniformemente (dirección opuesta) */
-        .car-5 { left: 12%; bottom: 35px; }
-        .car-6 { left: 35%; bottom: 35px; }
-        .car-7 { left: 58%; bottom: 35px; }
-        .car-8 { left: 81%; bottom: 35px; }
+        /* Fila superior - posiciones variadas (dirección opuesta) */
+        .car-5 { left: 8%; bottom: 35px; }
+        .car-6 { left: 32%; bottom: 35px; }
+        .car-7 { left: 55%; bottom: 35px; }
+        .car-8 { left: 78%; bottom: 35px; }
 
         /* ══════════════════════════════════════════
            CONTENIDO PRINCIPAL
@@ -863,14 +863,14 @@
     
     // Configuración de cada coche: posición inicial (%), velocidad, dirección, rango máximo de movimiento (px)
     const carConfig = [
-        { initialPercent: 5, speed: 0.8, direction: 1, maxRange: 80 },   // car-1
-        { initialPercent: 28, speed: 1.2, direction: 1, maxRange: 120 }, // car-2
-        { initialPercent: 51, speed: 0.6, direction: 1, maxRange: 60 },  // car-3
-        { initialPercent: 74, speed: 1.0, direction: 1, maxRange: 100 }, // car-4
-        { initialPercent: 12, speed: 1.1, direction: -1, maxRange: 90 }, // car-5
-        { initialPercent: 35, speed: 0.7, direction: -1, maxRange: 70 }, // car-6
-        { initialPercent: 58, speed: 1.3, direction: -1, maxRange: 130 },// car-7
-        { initialPercent: 81, speed: 0.9, direction: -1, maxRange: 85 }  // car-8
+        { initialPercent: 3, speed: 0.5, direction: 1, maxRange: 60 },    // car-1: lento, poco recorrido
+        { initialPercent: 22, speed: 1.8, direction: 1, maxRange: 180 },  // car-2: rápido, mucho recorrido
+        { initialPercent: 48, speed: 0.7, direction: 1, maxRange: 90 },   // car-3: medio-lento
+        { initialPercent: 68, speed: 1.4, direction: 1, maxRange: 150 },  // car-4: rápido
+        { initialPercent: 8, speed: 1.6, direction: -1, maxRange: 160 },  // car-5: rápido
+        { initialPercent: 32, speed: 0.4, direction: -1, maxRange: 50 },  // car-6: muy lento, poco recorrido
+        { initialPercent: 55, speed: 2.0, direction: -1, maxRange: 200 }, // car-7: muy rápido, mucho recorrido
+        { initialPercent: 78, speed: 0.9, direction: -1, maxRange: 100 }  // car-8: medio
     ];
     
     // Desplazamiento actual de cada coche desde su posición inicial
@@ -878,7 +878,7 @@
 
     function updateCars() {
         const scrollDelta = window.scrollY - lastScrollY;
-        const scrollSpeed = 0.3; // Multiplicador de velocidad base
+        const scrollSpeed = 0.4; // Multiplicador de velocidad base
         
         cars.forEach((car, index) => {
             const config = carConfig[index];
